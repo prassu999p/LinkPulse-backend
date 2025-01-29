@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials
 from .middleware.auth import verify_token, security
 from .services.credit import credit_service
+from .routes import content_routes
 
 app = FastAPI(
     title="LinkedIn Content Assistant API",
@@ -18,6 +19,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(content_routes.router)
 
 @app.get("/")
 async def root():

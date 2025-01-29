@@ -14,8 +14,16 @@ class CreditService:
             raise HTTPException(status_code=404, detail="User not found")
         return user['credits_remaining']
 
-    async def deduct_credits(self, user_id: str, amount: int = 1) -> Tuple[bool, int]:
-        """Deduct credits from a user's account"""
+    async def has_sufficient_credits(self, user_id: str, amount: int = 1) -> bool:
+        """Check if user has sufficient credits"""
+        try:
+            current_credits = await self.get_user_credits(user_id)
+            return current_credits >= amount
+        except HTTPException:
+            return False
+
+    async def deduct_credits(self, user_id: str, amount: int = 1) -> int:
+        """Deduct credits from a user's account and return remaining credits"""
         current_credits = await self.get_user_credits(user_id)
         if current_credits < amount:
             raise HTTPException(status_code=400, detail="Insufficient credits")
@@ -24,18 +32,18 @@ class CreditService:
         success = await db.update_user_credits(user_id, new_credits)
         if success:
             await db.log_transaction(user_id, -amount, "credit_deduction")
-            return True, new_credits
-        return False, current_credits
+            return new_credits
+        raise HTTPException(status_code=500, detail="Failed to deduct credits")
 
-    async def add_credits(self, user_id: str, amount: int) -> Tuple[bool, int]:
-        """Add credits to a user's account"""
+    async def add_credits(self, user_id: str, amount: int) -> int:
+        """Add credits to a user's account and return new balance"""
         current_credits = await self.get_user_credits(user_id)
         new_credits = current_credits + amount
         success = await db.update_user_credits(user_id, new_credits)
         if success:
             await db.log_transaction(user_id, amount, "credit_addition")
-            return True, new_credits
-        return False, current_credits
+            return new_credits
+        raise HTTPException(status_code=500, detail="Failed to add credits")
 
     async def initialize_user_credits(self, user_id: str) -> bool:
         """Initialize credits for a new user"""

@@ -1,7 +1,7 @@
-from fastapi import Request, HTTPException
+from fastapi import Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ..utils.database import db
-from typing import Optional
+from typing import Optional, Dict
 
 class CustomHTTPBearer(HTTPBearer):
     async def __call__(self, request: Request) -> Optional[HTTPAuthorizationCredentials]:
@@ -38,4 +38,9 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = None) -> str:
                 detail="Failed to create user"
             )
     
-    return user_id 
+    return user_id
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict:
+    """Get the current authenticated user"""
+    user_id = await verify_token(credentials)
+    return {"id": user_id} 
