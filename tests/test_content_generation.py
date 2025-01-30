@@ -23,7 +23,7 @@ def mock_verify_token():
 def mock_credit_service():
     with patch("app.routes.content_routes.credit_service") as mock:
         mock.has_sufficient_credits = AsyncMock(return_value=True)
-        mock.deduct_credits = AsyncMock(return_value=9)  # 9 credits remaining after deduction
+        mock.deduct_credits = AsyncMock(return_value=(True, 9))  # Return (success, credits_remaining)
         yield mock
 
 @pytest.fixture

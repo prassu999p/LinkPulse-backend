@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials
-from .middleware.auth import verify_token, security
-from .services.credit import credit_service
-from .routes import content_routes
+from app.middleware.auth import verify_token, security
+from app.services.credit import credit_service
+from app.routes import content_routes
+from app.config import settings
 
 app = FastAPI(
     title="LinkedIn Content Assistant API",
@@ -14,10 +15,11 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=["http://localhost:3000"],  # Frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Include routers

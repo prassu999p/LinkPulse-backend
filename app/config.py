@@ -1,26 +1,39 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+from typing import List
+from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 
 class Settings(BaseSettings):
-    # Supabase Configuration
+    # API Keys and URLs
     SUPABASE_URL: str
     SUPABASE_KEY: str
-    
-    # DeepSeek Configuration
     DEEPSEEK_API_KEY: str
-    
-    # Paddle Configuration
     PADDLE_PUBLIC_KEY: str
     PADDLE_VENDOR_ID: str
-    
-    # Application Configuration
+
+    # CORS Settings
+    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+
+    # JWT Settings
+    JWT_SECRET: str = "your_jwt_secret_key"
+    JWT_ALGORITHM: str = "HS256"
+
+    # API Settings
+    API_VERSION: str = "v1"
+    DEBUG: bool = True
+
+    # Application Settings
     INITIAL_FREE_CREDITS: int = 10
-    
-    class Config:
-        env_file = ".env"
+
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="allow"
+    )
 
 @lru_cache()
-def get_settings():
+def get_settings() -> Settings:
     return Settings()
 
 settings = get_settings() 

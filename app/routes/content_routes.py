@@ -47,8 +47,13 @@ async def generate_reply(
             tone=request.tone
         )
         
-        # Deduct 1 credit
-        credits_remaining = await credit_service.deduct_credits(current_user["id"], 1)
+        # Deduct 1 credit and get remaining credits
+        success, credits_remaining = await credit_service.deduct_credits(current_user["id"], 1)
+        if not success:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to deduct credits"
+            )
         
         return GenerateReplyResponse(
             reply=reply,
@@ -96,8 +101,13 @@ async def generate_post(
             max_length=request.max_length
         )
         
-        # Deduct 1 credit
-        credits_remaining = await credit_service.deduct_credits(current_user["id"], 1)
+        # Deduct 1 credit and get remaining credits
+        success, credits_remaining = await credit_service.deduct_credits(current_user["id"], 1)
+        if not success:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to deduct credits"
+            )
         
         return GeneratePostResponse(
             post_content=post_content,
@@ -125,7 +135,7 @@ async def rewrite_post(
     current_user: Dict = Depends(get_current_user)
 ) -> RewritePostResponse:
     """
-    Rewrite an existing LinkedIn post in a different tone.
+    Rewrite an existing LinkedIn post.
     Requires 1 credit per rewrite.
     """
     # Check if user has enough credits
@@ -136,7 +146,7 @@ async def rewrite_post(
         )
     
     try:
-        # Rewrite post using DeepSeek
+        # Generate rewritten post using DeepSeek
         rewritten_content = await deepseek_service.rewrite_post(
             post_content=request.post_content,
             tone=request.tone,
@@ -145,8 +155,13 @@ async def rewrite_post(
             additional_instructions=request.additional_instructions
         )
         
-        # Deduct 1 credit
-        credits_remaining = await credit_service.deduct_credits(current_user["id"], 1)
+        # Deduct 1 credit and get remaining credits
+        success, credits_remaining = await credit_service.deduct_credits(current_user["id"], 1)
+        if not success:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to deduct credits"
+            )
         
         return RewritePostResponse(
             rewritten_content=rewritten_content,

@@ -2,6 +2,7 @@ from fastapi import Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ..utils.database import db
 from typing import Optional, Dict
+import uuid
 
 class CustomHTTPBearer(HTTPBearer):
     async def __call__(self, request: Request) -> Optional[HTTPAuthorizationCredentials]:
@@ -23,9 +24,15 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = None) -> str:
             detail="Missing authentication token"
         )
     
-    # Here you would typically verify the JWT token
-    # For now, we'll just use the token as the user_id
-    user_id = credentials.credentials
+    # Validate UUID format
+    try:
+        user_id = credentials.credentials
+        uuid.UUID(user_id)  # Validate UUID format
+    except ValueError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication token format"
+        )
     
     # Check if user exists
     user = await db.get_user(user_id)

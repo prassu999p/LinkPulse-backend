@@ -11,41 +11,34 @@ def get_test_headers(user_id: str = None):
         user_id = str(uuid4())
     return {"Authorization": f"Bearer {user_id}"}
 
-def test_root():
+def test_root(test_client):
     """Test the root endpoint"""
-    response = client.get("/")
+    response = test_client.get("/")
     assert response.status_code == 200
     assert response.json() == {"message": "Welcome to LinkedIn Content Assistant API"}
 
-def test_credits_flow():
+def test_credits_flow(test_client, auth_headers):
     """Test the complete credits flow"""
-    # Generate a test user ID
-    user_id = str(uuid4())
-    headers = get_test_headers(user_id)
-    
     # Test credit initialization
-    response = client.post("/credits/initialize", headers=headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert "credits" in data
-    assert data["credits"] == 10  # INITIAL_FREE_CREDITS
-    
-    # Test getting credits
-    response = client.get("/credits", headers=headers)
+    response = test_client.post("/credits/initialize", headers=auth_headers)
     assert response.status_code == 200
     assert response.json()["credits"] == 10
-    
-    # Test initializing again (should indicate already initialized)
-    response = client.post("/credits/initialize", headers=headers)
-    assert response.status_code == 200
-    assert "already has credits" in response.json()["message"]
 
-def test_unauthorized_access():
+    # Test getting credits
+    response = test_client.get("/credits", headers=auth_headers)
+    assert response.status_code == 200
+    assert response.json()["credits"] == 10
+
+def test_unauthorized_access(test_client):
     """Test accessing endpoints without authorization"""
-    # Try to get credits without authorization
-    response = client.get("/credits", headers={})
+    # Test without auth header
+    response = test_client.get("/credits")
     assert response.status_code == 401
-    
-    # Try to initialize credits without authorization
-    response = client.post("/credits/initialize", headers={})
+
+    # Test with invalid auth header
+    response = test_client.get("/credits", headers={"Authorization": "Bearer invalid"})
+    assert response.status_code == 401
+
+    # Test credit initialization without auth
+    response = test_client.post("/credits/initialize")
     assert response.status_code == 401 

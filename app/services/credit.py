@@ -22,27 +22,27 @@ class CreditService:
         except HTTPException:
             return False
 
-    async def deduct_credits(self, user_id: str, amount: int = 1) -> int:
-        """Deduct credits from a user's account and return remaining credits"""
+    async def deduct_credits(self, user_id: str, amount: int = 1) -> Tuple[bool, int]:
+        """Deduct credits from a user's account and return success status and remaining credits"""
         current_credits = await self.get_user_credits(user_id)
         if current_credits < amount:
-            raise HTTPException(status_code=400, detail="Insufficient credits")
+            raise HTTPException(status_code=402, detail="Insufficient credits")
         
         new_credits = current_credits - amount
         success = await db.update_user_credits(user_id, new_credits)
         if success:
             await db.log_transaction(user_id, -amount, "credit_deduction")
-            return new_credits
+            return True, new_credits
         raise HTTPException(status_code=500, detail="Failed to deduct credits")
 
-    async def add_credits(self, user_id: str, amount: int) -> int:
-        """Add credits to a user's account and return new balance"""
+    async def add_credits(self, user_id: str, amount: int) -> Tuple[bool, int]:
+        """Add credits to a user's account and return success status and new balance"""
         current_credits = await self.get_user_credits(user_id)
         new_credits = current_credits + amount
         success = await db.update_user_credits(user_id, new_credits)
         if success:
             await db.log_transaction(user_id, amount, "credit_addition")
-            return new_credits
+            return True, new_credits
         raise HTTPException(status_code=500, detail="Failed to add credits")
 
     async def initialize_user_credits(self, user_id: str) -> bool:
