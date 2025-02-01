@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials
 from app.middleware.auth import verify_token, security
 from app.services.credit import credit_service
-from app.routes import content_routes
+from app.routes import content_routes, user_routes, auth_routes
 from app.config import settings
 
 app = FastAPI(
@@ -23,21 +23,30 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth_routes.router)  # Add auth routes first
 app.include_router(content_routes.router)
+app.include_router(user_routes.router)
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to LinkedIn Content Assistant API"}
+    """Root endpoint"""
+    return {"message": "Welcome to LinkPulse API"}
 
 @app.get("/credits")
 async def get_credits(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get user's current credit balance"""
     try:
         user_id = await verify_token(credentials)
+        print(f"Getting credits for user: {user_id}")
         credits = await credit_service.get_user_credits(user_id)
+        print(f"Got credits: {credits}")
         return {"credits": credits}
+    except HTTPException as e:
+        print(f"HTTP error getting credits: {str(e)}")
+        raise e
     except Exception as e:
-        raise HTTPException(status_code=401, detail="Authentication failed")
+        print(f"Unexpected error getting credits: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/credits/initialize")
 async def initialize_credits(credentials: HTTPAuthorizationCredentials = Depends(security)):
