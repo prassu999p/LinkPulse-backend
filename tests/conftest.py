@@ -2,9 +2,10 @@ import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 from app.middleware.auth import verify_token
-from app.utils.database import get_db, Database
-from app.config import Settings
-from unittest.mock import patch, AsyncMock, MagicMock
+from app.utils.database import get_db
+import uuid
+from fastapi import HTTPException
+from unittest.mock import patch, AsyncMock
 from app.models.user import UserProfile, NotificationPreferences, PlanType
 from app.models.user_models import Plan
 
@@ -139,32 +140,4 @@ def test_user():
         notification_preferences=NotificationPreferences(),
         created_at="2024-01-01T00:00:00",
         updated_at="2024-01-01T00:00:00"
-    )
-
-@pytest.fixture
-def settings():
-    """Test settings with mock values"""
-    return Settings(
-        SUPABASE_URL="https://test-project.supabase.co",
-        SUPABASE_KEY="test-key",
-        INITIAL_FREE_CREDITS=10,
-        JWT_SECRET="test-secret",
-        OPENAI_API_KEY="test-openai-key"
-    )
-
-@pytest.fixture
-def mock_supabase():
-    """Mock Supabase client"""
-    mock = MagicMock()
-    mock.auth = MagicMock()
-    mock.from_ = MagicMock(return_value=mock)
-    mock.insert = MagicMock(return_value=mock)
-    mock.execute = MagicMock(return_value=MagicMock(data=[]))
-    return mock
-
-@pytest.fixture
-def test_db(settings, mock_supabase):
-    """Test database instance with mocked dependencies"""
-    db = Database(settings)
-    db.client = mock_supabase
-    return db 
+    ) 

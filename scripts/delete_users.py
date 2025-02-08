@@ -12,24 +12,14 @@ async def main():
     settings = Settings()
     db = Database()
     db.settings = settings  # Set settings after initialization
-    
-    email = 'help.datasphere@gmail.com'
-    
-    # Check if user exists in auth
-    print(f"\nChecking user: {email}")
-    auth_response = db.admin_client.auth.admin.list_users()
-    auth_users = [user for user in auth_response if user.email == email]
-    if auth_users:
-        print(f"Found in auth system: {auth_users[0].id}")
-    else:
-        print("Not found in auth system")
-    
-    # Check if user exists in profiles
-    user = await db.get_user_by_email(email)
-    if user:
-        print(f"Found in profiles: {user}")
-    else:
-        print("Not found in profiles")
+
+    # Delete all users
+    print("Deleting all users...")
+    try:
+        deleted_count = db.client.from_('users').delete().execute()  # Delete all users without any condition
+        print(f"Deleted {deleted_count} users from the database.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
 
 if __name__ == '__main__':
     asyncio.run(main())
